@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+        "baseUrl": "./src",
+
+        "isolatedModules": true,    // Required for Parcel to work correctly.
+        "noEmit": true,             // TS compiler shouldn't emit any output: Parcel handles that.
+
+        "allowJs": true,            // Tell TS to allow JS files as inputs...
+        "checkJs": true,            // ...and to check their types.
+
+        "strict": true,
+        "strictNullChecks": false,
+        "noImplicitAny": false,
+
+        "useDefineForClassFields": true,
+        "allowArbitraryExtensions": true,
+        "allowImportingTsExtensions": true,
+    },
+    "include": [
+        "./src/**/*.js",
+        "./src/**/*.ts",
+        "./*.d.ts",
+    ],
+    "exclude": [
+        "./node_modules",
+        "./dist",
+    ]
+}
