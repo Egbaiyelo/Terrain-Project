@@ -6,6 +6,7 @@ import fragSource from './shaders/terrain.frag';
 
 import { SceneObject, generateTerrain } from './sceneObject';
 import { menu } from './menu';
+import { Chunk, WorldRenderer } from './chunk';
 
 // ------------------------------
 
@@ -47,33 +48,13 @@ const uNormalMatrix = gl.getUniformLocation(terrainProgram, 'uNormalMatrix');
 
 // ==========================================================
 
-const terrain = new SceneObject();
-const { vertices, normals, indices } = generateTerrain(150, 150, 0.01, 7, 0.5, 2, 3);
+const terrain = new Chunk(gl, 0, 0, 150);
+// const world = new WorldRenderer(gl, 2, null, 150);
+// world.updateLocation(vec3(0.))
+// console.log(world)
 
-const vertex = new Float32Array(vertices);
-const normal = new Float32Array(normals);
-const index = new Uint16Array(indices);
-
-// Buffer and vertex attributes
-// ----------------------------
-
-const vertexBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, vertex, gl.STATIC_DRAW);
-
-gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(0);
-
-const normalBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, normal, gl.STATIC_DRAW);
-
-gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(1);
-
-const indexBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, index, gl.STATIC_DRAW);
+const cameraPosition = menu.cameraPosition;
+const cameraTarget = vec3(0, 0, 0);
 
 function draw(time = 0) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -82,6 +63,26 @@ function draw(time = 0) {
 
     terrain.scale.y = 2;
     
+    menuResponse(gl);
+
+    // ==========================================================
+    // cameraPosition.x += 0.1;
+    // cameraTarget.x += 0.1;
+
+    const viewMatrix = lookAtMatrix(cameraPosition, cameraTarget);
+    const projMatrix = perspectiveMatrix(radians(60), canvas.width / canvas.height, 0.1, 200);
+    gl.uniformMatrix4fv(uViewLocation, false, viewMatrix.flat());
+    gl.uniformMatrix4fv(uProjLocation, false, projMatrix.flat());
+
+    // world.render( uModelLocation, uNormalMatrix);
+    terrain.render(gl, uModelLocation, uNormalMatrix)
+
+    window.requestAnimationFrame(draw);
+}
+draw();
+
+
+function menuResponse(gl){
     // Send lighting and material uniforms:
     gl.uniform3fv(uLight.ambient, menu.lightAmbient);
     gl.uniform3fv(uLight.diffuse, menu.lightDiffuse);
@@ -93,23 +94,7 @@ function draw(time = 0) {
     gl.uniform3fv(uMaterial.specular, menu.materialSpecular);
 
     gl.uniform1f(uMaterial.shininess, menu.materialShininess);
-
-    // ==========================================================
-
-    const cameraPosition = menu.cameraPosition;
-    const cameraTarget = vec3(0, 0, 0);
-
-    const viewMatrix = lookAtMatrix(cameraPosition, cameraTarget);
-    const projMatrix = perspectiveMatrix(radians(60), canvas.width / canvas.height, 0.1, 200);
-    gl.uniformMatrix4fv(uViewLocation, false, viewMatrix.flat());
-    gl.uniformMatrix4fv(uProjLocation, false, projMatrix.flat());
-
-    const modelMatrix = terrain.getModelMatrix();
-    gl.uniformMatrix4fv(uModelLocation, false, modelMatrix.flat());
-    gl.uniformMatrix3fv(uNormalMatrix, false, normalMatrix(modelMatrix, true).flat());
-
-    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
-
-    window.requestAnimationFrame(draw);
 }
-draw();
+
+
+export class Renderer{}

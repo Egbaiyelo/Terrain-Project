@@ -42,7 +42,19 @@ export class SceneObject {
 
         return mult(mult(tMat, rMat), sMat);
     }
+
+    ProgramSetUp(){
+
+    }
+
+    Render(){
+
+    }
 }
+
+
+
+
 
 // tried to manually implement a perlin noise function but ran 
 // into to many problems later on, thats why it isn't used anymore
@@ -91,7 +103,7 @@ function applyHeightCurve(noiseHeight, heightMult) {
 // to install simplex-noise
 const noise = createNoise2D();
 
-export function generateTerrain(length, width, scale, octaves, persistance, lacunarity, heightMultiplier) {
+export function generateTerrain(terrainX, terrainZ, length, width, scale, octaves, persistance, lacunarity, heightMultiplier) {
     const vertices = [];
     const normals = [];
     const indices = [];
@@ -100,8 +112,8 @@ export function generateTerrain(length, width, scale, octaves, persistance, lacu
     const centerX = length / 2;
     const centerZ = width / 2;
     
-    for (let x = 0; x < length; x++) {
-        for (let z = 0; z < width; z++) {
+    for (let x = terrainX; x < terrainX + length; x++) {
+        for (let z = terrainZ; z < terrainZ + width; z++) {
             
             let amp = 1;
             let freq = 1;
@@ -133,13 +145,13 @@ export function generateTerrain(length, width, scale, octaves, persistance, lacu
             }
 
             // Shift the terrain to center it at (0, 0, 0)
-            const terrainX = x - centerX;
-            const terrainZ = z - centerZ;
-
+            const centeredX = x - centerX;
+            const centeredZ = z - centerZ;
+            
             const noiseMultiplied = noiseHeight * heightMultiplier
             const noiseHeightCurved = applyHeightCurve(noiseMultiplied, heightMultiplier);
-
-            vertices.push(terrainX, noiseHeightCurved, terrainZ); // vertex (x, y, z)
+            
+            vertices.push(centeredX, noiseHeightCurved, centeredZ); // VerticesXYZ
 
             // apply the heightMultiplier for the normals as well
             const leftMult = LN * heightMultiplier;
@@ -164,11 +176,12 @@ export function generateTerrain(length, width, scale, octaves, persistance, lacu
             }
 
             // indices for creating triangles
-            if (x < width - 1 && z < width - 1) {
-                const i = x + z * length;
+            if (x < terrainX + length - 1 && z < terrainZ + width - 1) {
+                const i = (x - terrainX) + (z - terrainZ) * length;
                 indices.push(i, i + 1, i + length);
-                indices.push(i + 1, i + width + 1, i + length);
+                indices.push(i + 1, i + length + 1, i + length);
             }
+            
         }
     }
     return { vertices, normals, indices };
