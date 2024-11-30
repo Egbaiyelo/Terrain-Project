@@ -11,7 +11,7 @@ export class WorldRenderer{
 
 
         // Just for now
-        this.renderDistance = 1;
+        // this.renderDistance = 1;
 
 
 
@@ -55,34 +55,20 @@ export class WorldRenderer{
     }
 
     unloadChunk(position){
-        const chunkX = Math.floor(position.x / this.chunkSize);
-        const chunkZ = Math.floor(position.z / this.chunkSize);
+        const posX = Math.floor(position.x / this.chunkSize);
+        const posZ = Math.floor(position.z / this.chunkSize);
 
-        for (let x = -this.renderDistance; x <= this.renderDistance; x++) {
-            for (let z = -this.renderDistance; z <= this.renderDistance; z++) {
-                const key = `${chunkX + x},${chunkZ + z}`;
+        this.chunks.forEach((chunk, key) => {
+            const [chunkX, chunkZ] = key.split(',').map(Number);
 
-                if (!this.chunks.has(key)) {
-                    const chunk = new Chunk(
-                        this.gl, 
-                        (chunkX + x) * this.chunkSize,
-                        (chunkZ + z) * this.chunkSize,
-                        this.chunkSize,
-                        this.terrainScale,
-                        this.octaves,
-                        this.persistence,
-                        this.lacunarity,
-                        this.heightMultiplier
-                    );
-                    this.chunks.set(key, chunk);
-                }
-            }
-        }
+            if (Math.abs(chunkX - posX) > this.renderDistance || Math.abs(chunkZ - posZ) > this.renderDistance)
+                this.chunks.delete(key);
+        })
     }
 
     updateLocation(position){
         this.loadChunk(position);
-        // this.unloadChunk(position);
+        this.unloadChunk(position);
     }
 
     render(uModelLocation, uNormalMatrix){
@@ -131,14 +117,16 @@ export class Chunk extends SceneObject{
             this.heightMultiplier,
         );
 
+        
         this.vertices = new Float32Array(vertices);
         this.normals = new Float32Array(normals);
         this.indices = new Uint16Array(indices);
-
+        
         this.ProgramSetUp(gl)
 
     }
 
+    // Bind the buffers
     ProgramSetUp(gl){
 
         // Bind buffers and vertex attributes
@@ -162,7 +150,15 @@ export class Chunk extends SceneObject{
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
     }
 
+    // Rebind the buffers and all
+    UpdateBuffers(){
+
+    }
+
+    // Render the chunk
     render(gl, uModelLocation, uNormalMatrix){
+        this.ProgramSetUp(gl);
+
         const modelMatrix = this.getModelMatrix();
         gl.uniformMatrix4fv(uModelLocation, false, modelMatrix.flat());
         gl.uniformMatrix3fv(uNormalMatrix, false, normalMatrix(modelMatrix, true).flat());

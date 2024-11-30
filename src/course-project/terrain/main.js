@@ -48,26 +48,38 @@ const uNormalMatrix = gl.getUniformLocation(terrainProgram, 'uNormalMatrix');
 
 // ==========================================================
 
-const terrain = new Chunk(gl, 0, 0, 150);
-// const world = new WorldRenderer(gl, 2, null, 150);
-// world.updateLocation(vec3(0.))
+const terrain = new Chunk(gl, 0, 0, 10);
+const world = new WorldRenderer(gl, 2, null, 100);
+world.updateLocation(vec3(0.))
+const chunky = new Chunk(gl, 10, 10, 10)
+// const chu = new Chunk(gl, 10, 10, 100)
 // console.log(world)
 
 const cameraPosition = menu.cameraPosition;
 const cameraTarget = vec3(0, 0, 0);
 
+let lastTime = 0;
+let frameCount = 0;
+let fps = 0;
+
 function draw(time = 0) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // ==========================================================
+    cameraPosition.x += 0.5;
+    cameraTarget.x += 0.5;
 
-    terrain.scale.y = 2;
+    world.updateLocation(cameraPosition)
+    console.log(world.chunks)
+    
+    // terrain.scale.y = 2;
     
     menuResponse(gl);
+    // terrain.render(gl, uModelLocation, uNormalMatrix)
+    // chunky.render(gl, uModelLocation, uNormalMatrix)
+    world.render(uModelLocation, uNormalMatrix)
 
     // ==========================================================
-    // cameraPosition.x += 0.1;
-    // cameraTarget.x += 0.1;
 
     const viewMatrix = lookAtMatrix(cameraPosition, cameraTarget);
     const projMatrix = perspectiveMatrix(radians(60), canvas.width / canvas.height, 0.1, 200);
@@ -75,7 +87,6 @@ function draw(time = 0) {
     gl.uniformMatrix4fv(uProjLocation, false, projMatrix.flat());
 
     // world.render( uModelLocation, uNormalMatrix);
-    terrain.render(gl, uModelLocation, uNormalMatrix)
 
     window.requestAnimationFrame(draw);
 }
