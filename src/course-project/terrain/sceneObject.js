@@ -184,5 +184,16 @@ export function generateTerrain(terrainX, terrainZ, length, width, scale, octave
             
         }
     }
+    let taken = vertices.filter((_, index) => index % 3 === 0);
+    let result = [
+        taken[0 * length + 0] + centerX,       // value at (0, 0)
+        taken[0 * length + 99] + centerX,     // value at (0, 100)
+        taken[99 * length + 0] + centerX,     // value at (100, 0)
+        taken[99 * length + 99] + centerX    // value at (100, 100)
+    ];
+    // console.log(
+    //     result
+    // )
     return { vertices, normals, indices };
+
 }

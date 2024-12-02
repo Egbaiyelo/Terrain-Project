@@ -6,7 +6,7 @@ import fragSource from './shaders/terrain.frag';
 
 import { SceneObject, generateTerrain } from './sceneObject';
 import { menu } from './menu';
-import { Chunk, WorldRenderer } from './chunk';
+import { AsyncWorldRenderer, Chunk, ChunkLoader, WorldRenderer } from './chunk';
 
 // ------------------------------
 
@@ -49,8 +49,10 @@ const uNormalMatrix = gl.getUniformLocation(terrainProgram, 'uNormalMatrix');
 // ==========================================================
 
 const terrain = new Chunk(gl, 0, 0, 10);
-const world = new WorldRenderer(gl, 2, null, 100);
-world.updateLocation(vec3(0.))
+const world = new AsyncWorldRenderer(gl, 1, null, 100);
+world.updateLocation(vec3(0.));
+const second = new WorldRenderer(gl, 2, null, 100);
+second.updateLocation(vec3(0.));
 const chunky = new Chunk(gl, 10, 10, 10)
 // const chu = new Chunk(gl, 10, 10, 100)
 // console.log(world)
@@ -63,14 +65,26 @@ let frameCount = 0;
 let fps = 0;
 
 function draw(time = 0) {
+    const deltaTime = time - lastTime;
+    lastTime = time;
+    
+    // Update frame count and FPS every second
+    frameCount++;
+    if (deltaTime > 1000) {
+        fps = frameCount;
+        frameCount = 0;
+        lastTime = time; // Reset time
+        console.log(`FPS: ${fps}`);
+    }
+
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // ==========================================================
-    cameraPosition.x += 0.5;
-    cameraTarget.x += 0.5;
+    // cameraPosition.x += 0.2;
+    // cameraTarget.x += 0.2;
 
-    world.updateLocation(cameraPosition)
-    console.log(world.chunks)
+    // world.updateLocation(cameraPosition)
+    // // console.log(world.chunks)
     
     // terrain.scale.y = 2;
     
