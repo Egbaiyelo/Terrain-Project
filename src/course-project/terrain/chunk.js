@@ -580,6 +580,279 @@ export class Chunk extends SceneObject{
     }
 }
 
+export class WChunk extends SceneObject{
+
+    constructor(gl, chunkX, chunkZ, chunkSize, terrainScale, octaves, persistence, lacunarity, heightMultiplier, vertices, normals, indices){
+        super()
+
+        this.gl = gl;
+        this.chunkX = chunkX;
+        this.chunkZ = chunkZ;
+        this.chunkSize = chunkSize;
+
+
+        this.terrainScale = terrainScale;
+        this.octaves = octaves;
+        this.persistence = persistence;
+        this.lacunarity = lacunarity;
+        this.heightMultiplier = heightMultiplier;
+
+        this.toRender = false;
+
+        this.vertices = new Float32Array(vertices);
+        this.normals = new Float32Array(normals);
+        this.indices = new Uint16Array(indices);
+        
+        this.ProgramSetUp(gl)
+
+    }
+
+    // Bind the buffers
+    ProgramSetUp(gl){
+
+        // Bind buffers and vertex attributes
+
+        this.vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertices, gl.STATIC_DRAW);
+
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(0);
+
+        this.normalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.normals, gl.STATIC_DRAW);
+
+        gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(1);
+
+        this.indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
+    }
+
+    // Rebind the buffers and all
+    UpdateBuffers(){
+
+    }
+
+    // Render the chunk
+    render(gl, uModelLocation, uNormalMatrix){
+
+        // Rebind
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
+        gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(1);
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+
+        const modelMatrix = this.getModelMatrix();
+        gl.uniformMatrix4fv(uModelLocation, false, modelMatrix.flat());
+        gl.uniformMatrix3fv(uNormalMatrix, false, normalMatrix(modelMatrix, true).flat());
+    
+        gl.drawElements(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_SHORT, 0);
+    }
+}
+
+
+export class ChunkWorks{
+
+    constructor(gl, renderDistance, camera, chunkSize){
+        this.gl = gl;
+        this.renderDistance = renderDistance;
+        this.camera = camera;
+        this.chunkSize = chunkSize;
+
+        this.preloadDistance = this.renderDistance + 2;
+
+
+        this.terrainScale = 0.01;
+        this.octaves = 7;
+        this.persistence = 0.5;
+        this.lacunarity = 2;
+        this.heightMultiplier = 3;
+
+
+        this.renderChunks = new Map();
+        this.loadedChunks = new Map();
+        this.loadingQueue = new Map();
+        
+        this.worker = new Worker(new URL('chunkWorker.js', import.meta.url), {type: "module"}); // Create a new Web Worker
+        this.worker.onmessage = this.handleWorkerMessage.bind(this); // Handle messages from the worker
+        this.workerTasks = new Set(); // To track ongoing worker tasks
+    }
+
+    
+    loadChunk(position) {
+        const chunkX = Math.floor(position.x / this.chunkSize);
+        const chunkZ = Math.floor(position.z / this.chunkSize);
+
+        console.time('Load Chunk construction'); // Start timing
+
+        const batch = []; // Array to store chunk data for batch processing
+
+        for (let x = -this.preloadDistance; x <= this.preloadDistance; x++) {
+            for (let z = -this.preloadDistance; z <= this.preloadDistance; z++) {
+                const distance = Math.sqrt(x * x + z * z); // Use a circle to limit distance?
+
+                const key = `${chunkX + x},${chunkZ + z}`;
+
+                if (Math.abs(chunkX - x) <= this.renderDistance || Math.abs(chunkZ - z) <= this.renderDistance) {
+                    if (!this.renderChunks.has(key)) {
+                        // If not in render chunks, add to batch for processing
+                        if (this.loadedChunks.has(key)) {
+                            console.log("loaded had it")
+                            this.renderChunks.set(key, this.loadedChunks.get(key));
+                        } else {
+                            console.log("i had to get it")
+                            batch.push({ type: 'render', chunkX: chunkX + x, chunkZ: chunkZ + z });
+                        }
+                    }
+                } else if (distance <= this.preloadDistance) {
+                    if (!this.loadedChunks.has(key) && !this.loadingQueue.has(key)) {
+                        // Add chunk to batch for loading
+                        batch.push({ type: 'load', chunkX: chunkX + x, chunkZ: chunkZ + z });
+                    }
+                }
+            }
+        }
+
+        // Send the collected batch to the worker for processing
+        this.requestBatch(batch);
+        console.log(this.loadedChunks)
+
+        console.timeEnd('Load Chunk construction'); // End timing and print result
+    }
+
+    unloadChunk(position){
+        const posX = Math.floor(position.x / this.chunkSize);
+        const posZ = Math.floor(position.z / this.chunkSize);
+
+        // Unload from both renderChunks and loadedChunks
+        this.loadedChunks.forEach((chunk, key) => {
+            const [chunkX, chunkZ] = key.split(',').map(Number);
+
+            // Check if the chunk is outside preloadDistance //? we could even delay removing it // Notice this one is square
+            if (Math.abs(chunkX - posX) > this.preloadDistance || Math.abs(chunkZ - posZ) > this.preloadDistance) {
+                this.loadedChunks.delete(key); // Remove from loaded chunks
+            }
+
+            // Remove from render chunks
+            if (this.renderChunks.has(key)){
+                if (Math.abs(chunkX - posX) > this.renderDistance || Math.abs(chunkZ - posZ) > this.renderDistance) {
+                    this.renderChunks.delete(key);
+                }
+            }
+        });
+    }
+
+    updateLocation(position){
+        this.loadChunk(position);
+        this.unloadChunk(position);
+    }
+
+    // Send batch of chunks to worker for processing
+    async requestBatch(batch) {
+        // Add all tasks to the worker task tracker to keep track of them
+        batch.forEach(task => this.workerTasks.add(`${task.chunkX},${task.chunkZ}`));
+
+        batch.forEach(({ type, chunkX, chunkZ }) => {
+            this.worker.postMessage({
+                type,
+                chunkX,
+                chunkZ,
+                chunkSize: this.chunkSize,
+                terrainScale: this.terrainScale,
+                octaves: this.octaves,
+                persistence: this.persistence,
+                lacunarity: this.lacunarity,
+                heightMultiplier: this.heightMultiplier
+            });
+        });
+    }
+
+    handleWorkerMessage(event) {
+        const { type, chunkX, chunkZ, vertices, normals, indices } = event.data;
+        const key = `${chunkX},${chunkZ}`;
+    
+        if (type === 'load') {
+            // Once chunk is loaded, create the buffers and store the chunk
+            const chunk = new WChunk(
+                this.gl,
+                chunkX * this.chunkSize,
+                chunkZ * this.chunkSize,
+                this.chunkSize,
+                this.terrainScale,
+                this.octaves,
+                this.persistence,
+                this.lacunarity,
+                this.heightMultiplier,
+                vertices,
+                normals,
+                indices
+            );
+            this.loadedChunks.set(key, chunk);
+        } else if (type === 'render') {
+            // For rendering, create the chunk and add to renderChunks
+            const chunk = new WChunk(
+                this.gl,
+                chunkX * this.chunkSize,
+                chunkZ * this.chunkSize,
+                this.chunkSize,
+                this.terrainScale,
+                this.octaves,
+                this.persistence,
+                this.lacunarity,
+                this.heightMultiplier,
+                vertices,
+                normals,
+                indices
+            );
+            this.renderChunks.set(key, chunk);
+            this.loadedChunks.set(key, chunk);
+        }
+    
+        // Remove the task from the task tracker
+        this.workerTasks.delete(key);
+    }
+
+    
+    // Handle messages received from the worker
+    shandleWorkerMessage(event) {
+        const { type, chunkX, chunkZ, chunk } = event.data;
+        const key = `${chunkX},${chunkZ}`;
+
+        if (type === 'load') {
+            // Once chunk is loaded, store it
+            this.loadedChunks.set(key, chunk);
+        } else if (type === 'render') {
+            // Once chunk is ready for rendering, add it to renderChunks
+            this.renderChunks.set(key, chunk);
+            this.loadedChunks.set(key, chunk)
+        }
+
+        // Remove the task from the task tracker
+        this.workerTasks.delete(key);
+    }
+
+    render(uModelLocation, uNormalMatrix){
+        this.renderChunks.forEach(chunk => {
+            chunk.render(this.gl, uModelLocation, uNormalMatrix);
+        })
+    }
+
+    Initialize(){
+
+    }
+
+
+
+}
+
 
 
 export class Frustrum{

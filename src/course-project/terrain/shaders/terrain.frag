@@ -6,6 +6,7 @@ out vec4 fColor;
 
 uniform mat4 uViewMatrix;
 
+
 in vec3 vNormal;
 in vec3 vPosition;
 
@@ -55,6 +56,14 @@ vec3 blinnPhong(Material material, Light light) {
 
 
 void main() {
+    vec3 blue = vec3(0, 0.3803921568627451, 1);
+
     vec3 color = blinnPhong(uMaterial, uLight);    
-    fColor = vec4(color, 1.0);
+
+    if (vPosition.y <= -9.0){
+        fColor = vec4(blue, 1.0);
+    } else {
+
+        fColor = vec4(color, 1.0);
+    }
 }

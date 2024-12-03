@@ -6,7 +6,7 @@ import fragSource from './shaders/terrain.frag';
 
 import { SceneObject, generateTerrain } from './sceneObject';
 import { menu } from './menu';
-import { AsyncWorldRenderer, Chunk, ChunkLoader, WorldRenderer } from './chunk';
+import { AsyncWorldRenderer, Chunk, ChunkLoader, ChunkWorks, WorldRenderer } from './chunk';
 
 // ------------------------------
 
@@ -49,12 +49,10 @@ const uNormalMatrix = gl.getUniformLocation(terrainProgram, 'uNormalMatrix');
 // ==========================================================
 
 const terrain = new Chunk(gl, 0, 0, 10);
-const world = new AsyncWorldRenderer(gl, 1, null, 100);
+const world = new ChunkWorks(gl, 3, null, 100);
 world.updateLocation(vec3(0.));
 const second = new WorldRenderer(gl, 2, null, 100);
 second.updateLocation(vec3(0.));
-const chunky = new Chunk(gl, 10, 10, 10)
-// const chu = new Chunk(gl, 10, 10, 100)
 // console.log(world)
 
 const cameraPosition = menu.cameraPosition;
@@ -80,10 +78,10 @@ function draw(time = 0) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // ==========================================================
-    // cameraPosition.x += 0.2;
-    // cameraTarget.x += 0.2;
+    cameraPosition.x += 0.2;
+    cameraTarget.x += 0.2;
 
-    // world.updateLocation(cameraPosition)
+    world.updateLocation(cameraPosition)
     // // console.log(world.chunks)
     
     // terrain.scale.y = 2;
