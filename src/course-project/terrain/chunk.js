@@ -296,7 +296,6 @@ export class WorldRenderer{
 
 }
 
-
 export class ChunkLoader{
 
     constructor(gl, renderDistance, camera, chunkSize){
@@ -488,177 +487,6 @@ export class ChunkLoader{
     }
 }
 
-
-export class Chunk extends SceneObject{
-
-    constructor(gl, chunkX, chunkZ, chunkSize, terrainScale, octaves, persistence, lacunarity, heightMultiplier){
-        super()
-
-        this.gl = gl;
-        this.chunkX = chunkX;
-        this.chunkZ = chunkZ;
-        this.chunkSize = chunkSize;
-
-
-        this.terrainScale = 0.01;
-        this.octaves = 7;
-        this.persistence = 0.5;
-        this.lacunarity = 2;
-        this.heightMultiplier = 3;
-
-        const { vertices, normals, indices } = generateTerrain(
-            this.chunkX,
-            this.chunkZ,
-            this.chunkSize,
-            this.chunkSize,
-            this.terrainScale,
-            this.octaves,
-            this.persistence,
-            this.lacunarity,
-            this.heightMultiplier,
-        );
-
-        this.toRender = false;
-
-        
-        this.vertices = new Float32Array(vertices);
-        this.normals = new Float32Array(normals);
-        this.indices = new Uint16Array(indices);
-        
-        this.ProgramSetUp(gl)
-
-    }
-
-    // Bind the buffers
-    ProgramSetUp(gl){
-
-        // Bind buffers and vertex attributes
-
-        this.vertexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertices, gl.STATIC_DRAW);
-
-        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(0);
-
-        this.normalBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, this.normals, gl.STATIC_DRAW);
-
-        gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(1);
-
-        this.indexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
-    }
-
-    // Rebind the buffers and all
-    UpdateBuffers(){
-
-    }
-
-    // Render the chunk
-    render(gl, uModelLocation, uNormalMatrix){
-
-        // Rebind
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(0);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
-        gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(1);
-
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-
-        const modelMatrix = this.getModelMatrix();
-        gl.uniformMatrix4fv(uModelLocation, false, modelMatrix.flat());
-        gl.uniformMatrix3fv(uNormalMatrix, false, normalMatrix(modelMatrix, true).flat());
-    
-        gl.drawElements(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_SHORT, 0);
-    }
-}
-
-export class WChunk extends SceneObject{
-
-    constructor(gl, chunkX, chunkZ, chunkSize, terrainScale, octaves, persistence, lacunarity, heightMultiplier, vertices, normals, indices){
-        super()
-
-        this.gl = gl;
-        this.chunkX = chunkX;
-        this.chunkZ = chunkZ;
-        this.chunkSize = chunkSize;
-
-
-        this.terrainScale = terrainScale;
-        this.octaves = octaves;
-        this.persistence = persistence;
-        this.lacunarity = lacunarity;
-        this.heightMultiplier = heightMultiplier;
-
-        this.toRender = false;
-
-        this.vertices = new Float32Array(vertices);
-        this.normals = new Float32Array(normals);
-        this.indices = new Uint16Array(indices);
-        
-        this.ProgramSetUp(gl)
-
-    }
-
-    // Bind the buffers
-    ProgramSetUp(gl){
-
-        // Bind buffers and vertex attributes
-
-        this.vertexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertices, gl.STATIC_DRAW);
-
-        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(0);
-
-        this.normalBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, this.normals, gl.STATIC_DRAW);
-
-        gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(1);
-
-        this.indexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
-    }
-
-    // Rebind the buffers and all
-    UpdateBuffers(){
-
-    }
-
-    // Render the chunk
-    render(gl, uModelLocation, uNormalMatrix){
-
-        // Rebind
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(0);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
-        gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(1);
-
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-
-        const modelMatrix = this.getModelMatrix();
-        gl.uniformMatrix4fv(uModelLocation, false, modelMatrix.flat());
-        gl.uniformMatrix3fv(uNormalMatrix, false, normalMatrix(modelMatrix, true).flat());
-    
-        gl.drawElements(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_SHORT, 0);
-    }
-}
-
-
 export class ChunkWorks{
 
     constructor(gl, renderDistance, camera, chunkSize){
@@ -684,6 +512,7 @@ export class ChunkWorks{
         this.worker = new Worker(new URL('chunkWorker.js', import.meta.url), {type: "module"}); // Create a new Web Worker
         this.worker.onmessage = this.handleWorkerMessage.bind(this); // Handle messages from the worker
         this.workerTasks = new Set(); // To track ongoing worker tasks
+
     }
 
     
@@ -701,7 +530,8 @@ export class ChunkWorks{
 
                 const key = `${chunkX + x},${chunkZ + z}`;
 
-                if (Math.abs(chunkX - x) <= this.renderDistance || Math.abs(chunkZ - z) <= this.renderDistance) {
+                // Math.abs(chunkX - x) <= this.renderDistance || Math.abs(chunkZ - z) <= this.renderDistance
+                if (distance <= this.renderDistance) {
                     if (!this.renderChunks.has(key)) {
                         // If not in render chunks, add to batch for processing
                         if (this.loadedChunks.has(key)) {
@@ -712,7 +542,9 @@ export class ChunkWorks{
                             batch.push({ type: 'render', chunkX: chunkX + x, chunkZ: chunkZ + z });
                         }
                     }
-                } else if (distance <= this.preloadDistance) {
+                }
+
+                if (distance <= this.preloadDistance) {
                     if (!this.loadedChunks.has(key) && !this.loadingQueue.has(key)) {
                         // Add chunk to batch for loading
                         batch.push({ type: 'load', chunkX: chunkX + x, chunkZ: chunkZ + z });
@@ -723,7 +555,6 @@ export class ChunkWorks{
 
         // Send the collected batch to the worker for processing
         this.requestBatch(batch);
-        console.log(this.loadedChunks)
 
         console.timeEnd('Load Chunk construction'); // End timing and print result
     }
@@ -779,81 +610,135 @@ export class ChunkWorks{
         const { type, chunkX, chunkZ, vertices, normals, indices } = event.data;
         const key = `${chunkX},${chunkZ}`;
     
-        if (type === 'load') {
-            // Once chunk is loaded, create the buffers and store the chunk
-            const chunk = new WChunk(
-                this.gl,
-                chunkX * this.chunkSize,
-                chunkZ * this.chunkSize,
-                this.chunkSize,
-                this.terrainScale,
-                this.octaves,
-                this.persistence,
-                this.lacunarity,
-                this.heightMultiplier,
-                vertices,
-                normals,
-                indices
-            );
-            this.loadedChunks.set(key, chunk);
-        } else if (type === 'render') {
-            // For rendering, create the chunk and add to renderChunks
-            const chunk = new WChunk(
-                this.gl,
-                chunkX * this.chunkSize,
-                chunkZ * this.chunkSize,
-                this.chunkSize,
-                this.terrainScale,
-                this.octaves,
-                this.persistence,
-                this.lacunarity,
-                this.heightMultiplier,
-                vertices,
-                normals,
-                indices
-            );
+        // Once chunk is loaded, create the buffers and store the chunk
+        const chunk = new Chunk(
+            this.gl,
+            chunkX * this.chunkSize,
+            chunkZ * this.chunkSize,
+            this.chunkSize,
+            this.terrainScale,
+            this.octaves,
+            this.persistence,
+            this.lacunarity,
+            this.heightMultiplier,
+            { vertices, normals, indices }
+        );
+        this.loadedChunks.set(key, chunk);
+
+        if (type === 'render') {
+            // For rendering, add to renderChunks
             this.renderChunks.set(key, chunk);
-            this.loadedChunks.set(key, chunk);
         }
     
-        // Remove the task from the task tracker
-        this.workerTasks.delete(key);
-    }
-
-    
-    // Handle messages received from the worker
-    shandleWorkerMessage(event) {
-        const { type, chunkX, chunkZ, chunk } = event.data;
-        const key = `${chunkX},${chunkZ}`;
-
-        if (type === 'load') {
-            // Once chunk is loaded, store it
-            this.loadedChunks.set(key, chunk);
-        } else if (type === 'render') {
-            // Once chunk is ready for rendering, add it to renderChunks
-            this.renderChunks.set(key, chunk);
-            this.loadedChunks.set(key, chunk)
-        }
-
         // Remove the task from the task tracker
         this.workerTasks.delete(key);
     }
 
     render(uModelLocation, uNormalMatrix){
+        console.log(this.renderChunks)
         this.renderChunks.forEach(chunk => {
             chunk.render(this.gl, uModelLocation, uNormalMatrix);
         })
     }
+}
 
-    Initialize(){
+export class Chunk extends SceneObject{
+
+    constructor(gl, chunkX, chunkZ, chunkSize, terrainScale, octaves, persistence, lacunarity, heightMultiplier, chunkData = {}){
+        super()
+
+        this.gl = gl;
+        this.chunkX = chunkX;
+        this.chunkZ = chunkZ;
+        this.chunkSize = chunkSize;
+
+
+        this.terrainScale = terrainScale;
+        this.octaves = octaves;
+        this.persistence = persistence;
+        this.lacunarity = lacunarity;
+        this.heightMultiplier = heightMultiplier;
+
+        this.toRender = false;
+
+        // If options include data (vertices, normals, indices), use it; otherwise, generate terrain
+        if (chunkData.vertices && chunkData.normals && chunkData.indices) {
+            this.vertices = new Float32Array(chunkData.vertices);
+            this.normals = new Float32Array(chunkData.normals);
+            this.indices = new Uint16Array(chunkData.indices);
+        } else {
+            // If no pre-generated data, generate terrain using the provided params
+            const { vertices, normals, indices } = generateTerrain(
+                chunkX * chunkSize,
+                chunkZ * chunkSize,
+                chunkSize + 1,
+                chunkSize + 1,
+                terrainScale,
+                octaves,
+                persistence,
+                lacunarity,
+                heightMultiplier
+            );
+
+            this.vertices = new Float32Array(vertices);
+            this.normals = new Float32Array(normals);
+            this.indices = new Uint16Array(indices);
+        }
+        
+        this.ProgramSetUp(gl)
 
     }
 
+    // Bind the buffers
+    ProgramSetUp(gl){
 
+        // Bind buffers and vertex attributes
 
+        this.vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertices, gl.STATIC_DRAW);
+
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(0);
+
+        this.normalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.normals, gl.STATIC_DRAW);
+
+        gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(1);
+
+        this.indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
+    }
+
+    // Rebind the buffers and all
+    UpdateBuffers(){
+
+    }
+
+    // Render the chunk
+    render(gl, uModelLocation, uNormalMatrix){
+
+        // Rebind
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
+        gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(1);
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+
+        const modelMatrix = this.getModelMatrix();
+        gl.uniformMatrix4fv(uModelLocation, false, modelMatrix.flat());
+        gl.uniformMatrix3fv(uNormalMatrix, false, normalMatrix(modelMatrix, true).flat());
+    
+        gl.drawElements(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_SHORT, 0);
+    }
 }
-
-
 
 export class Frustrum{
     

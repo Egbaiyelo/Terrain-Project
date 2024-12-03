@@ -55,14 +55,29 @@ const second = new WorldRenderer(gl, 2, null, 100);
 second.updateLocation(vec3(0.));
 // console.log(world)
 
-const cameraPosition = menu.cameraPosition;
-const cameraTarget = vec3(0, 0, 0);
+
 
 let lastTime = 0;
 let frameCount = 0;
 let fps = 0;
 
+let cameraTarget = vec3(0)
+let cameraPosition = menu.cameraPosition;
+
+let speed = 0.01;
+
 function draw(time = 0) {
+    let cameraChange = menu.cameraPosition;
+
+    cameraPosition.x += cameraChange.x * speed;
+    cameraPosition.y += cameraChange.y * speed;
+    cameraPosition.z += cameraChange.z * speed;
+
+    cameraTarget.x += cameraChange.x * speed;
+    cameraTarget.y += cameraChange.y * speed;
+    cameraTarget.z += cameraChange.z * speed;
+
+
     const deltaTime = time - lastTime;
     lastTime = time;
     
@@ -78,10 +93,10 @@ function draw(time = 0) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // ==========================================================
-    cameraPosition.x += 0.2;
-    cameraTarget.x += 0.2;
+    // cameraPosition.x += 0.2;
+    // cameraTarget.x += 0.2;
 
-    world.updateLocation(cameraPosition)
+    // world.updateLocation(cameraPosition)
     // // console.log(world.chunks)
     
     // terrain.scale.y = 2;
