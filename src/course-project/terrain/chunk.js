@@ -1,7 +1,7 @@
 import { normalMatrix } from "mv-redux";
 import { generateTerrain, SceneObject } from "./sceneObject";
 
-
+// World renderer from archive but uses webworker
 export class ChunkWorks{
 
     constructor(gl, renderDistance, camera, chunkSize){
@@ -10,7 +10,7 @@ export class ChunkWorks{
         this.camera = camera;
         this.chunkSize = chunkSize; // - must be greater than 10
 
-        this.preloadDistance = this.renderDistance + 2; // - must be greater than render
+        this.preloadDistance = this.renderDistance + 1; // - must be greater than render
 
 
         this.terrainScale = 0.01;
@@ -23,63 +23,58 @@ export class ChunkWorks{
         this.renderChunks = new Map();
         this.loadedChunks = new Map();
         this.loadingQueue = new Map();
-
-        // const path = require('path');
-
-        // In your constructor, modify the Worker initialization
-        // this.worker = new Worker(path.resolve(__dirname, 'chunkWorker.js'), { type: "module" });
                 
-        this.worker = new Worker(new URL('chunkWorker.js', import.meta.url), {type: "module"}); // Create a new Web Worker
+        this.worker = new Worker(new URL('chunkWorker.js', import.meta.url), {type: "module"}); 
         this.worker.onmessage = this.handleWorkerMessage.bind(this); // Handle messages from the worker
         this.workerTasks = new Set(); // To track ongoing worker tasks
     }
 
     
+    // Load chunks and load to render array
     loadChunk(position) {
         const chunkX = Math.floor(position.x / this.chunkSize);
         const chunkZ = Math.floor(position.z / this.chunkSize);
         console.log(chunkX, chunkZ)
 
-        console.time('Load Chunk construction'); // Start timing
+        console.time('Load Chunk construction'); 
 
         const batch = []; // Array to store chunk data for batch processing
         const logger = [];
+        console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
         for (let x = -this.preloadDistance; x <= this.preloadDistance; x++) {
             for (let z = -this.preloadDistance; z <= this.preloadDistance; z++) {
 
-                // // Calculate the relative distance to the player's current chunk position
-                // const relX = chunkX + x;
-                // const relZ = chunkZ + z;
+                // console.log("$$$$$ this is x an y", x, z)
                 
-                // const key = `${relX},${relZ}`;
-                
-                // // Calculate the distance from the player's chunk to the surrounding chunk (use relative positions)
+                // Calculate the distance from the player's chunk to the surrounding chunk (use relative positions)
                 // const distance = Math.sqrt(Math.pow(relX - chunkX, 2) + Math.pow(relZ - chunkZ, 2));
                 
                 let distance = Math.sqrt((x * x) + (z * z)); // Use a circle to limit distance?
                 
                 let key = `${chunkX + x},${chunkZ + z}`;
+                console.log("distance and key", distance, key, x, z)
 
                 // if (distance <= this.preloadDistance) {
                 if (!this.loadedChunks.has(key) && !this.loadingQueue.has(key)) {
                     // Add chunk to batch for loading
+                    // console.log("################ adding load")
                     batch.push({ type: 'load', chunkX: chunkX + x, chunkZ: chunkZ + z });
-                    // logger.push("loaded");
                 }
 
-                // logger.push(distance)
-
                 // Math.abs(chunkX - x) <= this.renderDistance || Math.abs(chunkZ - z) <= this.renderDistance
-                if (distance <= this.renderDistance) {
-                    logger.push("render")
+                // if (distance <= this.renderDistance) {
+                if (Math.abs(x) <= this.renderDistance || Math.abs(z) <= this.renderDistance){
+                    // console.log("#############rendering", key)
+                    console.log("yes <= 2")
                     if (!this.renderChunks.has(key)) {
                         // If not in render chunks, add to batch for processing
                         if (this.loadedChunks.has(key)) {
-                            console.log("loaded had it")
+                            // console.log("loaded had it")
+                            console.log("had it")
                             this.renderChunks.set(key, this.loadedChunks.get(key));
                         } else {
-                            console.log("i had to get it")
+                            // console.log("i had to get it")
                             batch.push({ type: 'render', chunkX: chunkX + x, chunkZ: chunkZ + z });
                         }
                     }
@@ -92,9 +87,10 @@ export class ChunkWorks{
         // Send the collected batch to the worker for processing
         this.requestBatch(batch);
         // console.log(logger)
-        this.printChunkGrid(position.x, position.z, this.chunkSize, logger)
+        // this.printChunkGrid(position.x, position.z, this.chunkSize, logger)
 
         console.timeEnd('Load Chunk construction'); // End timing and print result
+        console.log(this.renderChunks)
     }
 
     printChunkGrid(playerX, playerZ, chunkSize, logger) {
@@ -217,10 +213,10 @@ export class ChunkWorks{
         );
         this.loadedChunks.set(key, chunk);
 
-        if (type === 'render') {
+        // if (type === 'render') {
             // For rendering, add to renderChunks
             this.renderChunks.set(key, chunk);
-        }
+        // }
     
         // Remove the task from the task tracker
         this.workerTasks.delete(key);

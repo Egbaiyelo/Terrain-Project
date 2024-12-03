@@ -49,8 +49,8 @@ const uNormalMatrix = gl.getUniformLocation(terrainProgram, 'uNormalMatrix');
 
 // ==========================================================
 
-const terrain = new Chunk(gl, 0, 0, 10);
-const world = new ChunkWorks(gl, 3, null, 100);
+// const terrain = new Chunk(gl, 0, 0, 10);
+const world = new ChunkWorks(gl, 2, null, 100);
 world.updateLocation(vec3(0.));
 const second = new WorldRenderer(gl, 2, null, 100);
 second.updateLocation(vec3(0.));
@@ -94,10 +94,10 @@ function draw(time = 0) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // ==========================================================
-    // cameraPosition.x += 0.2;
-    // cameraTarget.x += 0.2;
+    cameraPosition.x += 0.2;
+    cameraTarget.x += 0.2;
 
-    // world.updateLocation(cameraPosition)
+    world.updateLocation(cameraPosition)
     // // console.log(world.chunks)
     
     // terrain.scale.y = 2;
