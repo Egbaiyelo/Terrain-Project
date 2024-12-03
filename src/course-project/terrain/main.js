@@ -6,7 +6,8 @@ import fragSource from './shaders/terrain.frag';
 
 import { SceneObject, generateTerrain } from './sceneObject';
 import { menu } from './menu';
-import { AsyncWorldRenderer, Chunk, ChunkLoader, ChunkWorks, WorldRenderer } from './chunk';
+import { Chunk, ChunkWorks } from './chunk.js';
+import { WorldRenderer } from './archive.js';
 
 // ------------------------------
 
