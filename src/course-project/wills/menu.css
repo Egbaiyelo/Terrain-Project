@@ -1,0 +1,53 @@
+body {
+    display: flex;
+    align-items: flex-start;
+    gap: 1em;
+}
+
+.menu {
+    font-family: system-ui, -apple-system, sans-serif;
+    padding: 1em;
+    border: 1px solid currentColor;
+    width: max-content;
+}
+
+.menu hr {
+    width: 100%;
+}
+
+.menu p {
+    margin: 0;
+    white-space: nowrap;
+}
+
+.menu i {
+    font-family: 'Times New Roman', Times, serif;
+    font-style: italic;
+    font-size: 1.08em;
+}
+
+.menu label,
+.menu input {
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.menu label {
+    min-width: 8rem;
+    margin-right: 0.75em;
+}
+
+.menu input+span {
+    margin-left: 0.75em;
+    font-family: monospace;
+    display: inline-block;
+    min-width: 7ch;
+    text-align: right;
+}
+
+.menu input[type="reset"],
+.menu button[type="reset"] {
+    margin-top: 2rem;
+    padding: 0.45em;
+    width: 100%;
+}

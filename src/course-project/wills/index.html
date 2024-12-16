@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="module" src="./main.js"></script>
+    <title>terrain</title>
+</head>
+<body>
+    <canvas width="512" height="512"></canvas>
+
+    <form class="menu" id="tex-menu">
+        <div class="group">
+            <p>
+                <label for="mtl-ambient">Material ambient colour</label>
+                <input id="mtl-ambient" type="color" value="#90AFEA">
+            </p>
+            <p>
+                <label for="mtl-diffuse">Material diffuse colour</label>
+                <input id="mtl-diffuse" type="color" value="#A3A5A8">
+            </p>
+            <p>
+                <label for="mtl-specular">Material specular colour</label>
+                <input id="mtl-specular" type="color" value="#313335">
+            </p>
+            <p>
+                <label for="mtl-shininess">Material shininess</label>
+                <input id="mtl-shininess" type="range" value="18.50" step="0.5" min="0.5" max="32">
+                <span aria-hidden="true">18.50</span>
+            </p>
+        </div>
+        <hr>
+        <div class="group">
+            <p>
+                <label for="light-ambient">Light ambient colour</label>
+                <input id="light-ambient" type="color" value="#1F1F1F">
+            </p>
+            <p>
+                <label for="light-diffuse">Light diffuse colour</label>
+                <input id="light-diffuse" type="color" value="#FFFFEB">
+            </p>
+            <p>
+                <label for="light-specular">Light specular colour</label>
+                <input id="light-specular" type="color" value="#FFFFEE">
+            </p>
+        </div>
+        <hr>
+        <div class="group">
+            <p>
+                <label for="light-x">Light <i>x</i>-position</label>
+                <input type="range" id="light-x" min="-200" max="200" value="-2" step="0.5">
+                <span aria-hidden="true">-2.00</span>
+            </p>
+            <p>
+                <label for="light-y">Light <i>y</i>-position</label>
+                <input type="range" id="light-y" min="-200" max="200" value="16.50" step="0.5">
+                <span aria-hidden="true">16.50</span>
+            </p>
+            <p>
+                <label for="light-z">Light <i>z</i>-position</label>
+                <input type="range" id="light-z" min="-200" max="200" value="-6" step="0.5">
+                <span aria-hidden="true">-6.00</span>
+            </p>
+        </div>
+        <hr>
+        <div class="group">
+            <p>
+                <label for="camera-x">Camera <i>x</i>-position</label>
+                <input id="camera-x" type="range" min="-200" max="200" step="0.5" value="-22.50">
+                <span aria-hidden="true">-22.50</span>
+            </p>
+            <p>
+                <label for="camera-y">Camera <i>y</i>-position</label>
+                <input id="camera-y" type="range" min="-200" max="200" step="0.5" value="9.50">
+                <span aria-hidden="true">9.50</span>
+            </p>
+            <p>
+                <label for="camera-z">Camera <i>z</i>-position</label>
+                <input id="camera-z" type="range" min="-200" max="200" step="0.5" value="-4.50">
+                <span aria-hidden="true">-4.50</span>
+            </p>
+        </div>
+    </form>
+</body>
+</html>
