@@ -1,5 +1,6 @@
 import { normalMatrix } from "mv-redux";
 import { generateTerrain, SceneObject } from "./sceneObject";
+// import { chunkWorker } from "./webworkers/chunkWorker"
 
 // World renderer from archive but uses webworker
 export class ChunkWorks{
@@ -10,21 +11,21 @@ export class ChunkWorks{
         this.camera = camera;
         this.chunkSize = chunkSize; // - must be greater than 10
 
-        this.preloadDistance = this.renderDistance + 1; // - must be greater than render
-
+        this.preloadDistance = this.renderDistance + 2; // - must be greater than render
 
         this.terrainScale = 0.01;
         this.octaves = 7;
         this.persistence = 0.5;
         this.lacunarity = 2;
-        this.heightMultiplier = 3;
+        this.heightMultiplier = 1;
 
 
         this.renderChunks = new Map();
         this.loadedChunks = new Map();
         this.loadingQueue = new Map();
+        // this.waterChunks = new Map();
                 
-        this.worker = new Worker(new URL('chunkWorker.js', import.meta.url), {type: "module"}); 
+        this.worker = new Worker(new URL('./chunkWorker.js', import.meta.url), {type: "module"}); 
         this.worker.onmessage = this.handleWorkerMessage.bind(this); // Handle messages from the worker
         this.workerTasks = new Set(); // To track ongoing worker tasks
     }
@@ -139,6 +140,8 @@ export class ChunkWorks{
     
 
     unloadChunk(position){
+        console.log(position)
+        // console.log(position.x / this)
         const posX = Math.floor(position.x / this.chunkSize);
         const posZ = Math.floor(position.z / this.chunkSize);
         console.log(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!player at (${posX}, ${posZ})`)
@@ -170,8 +173,8 @@ export class ChunkWorks{
 
     updateLocation(position){
         // console.log(position)
-        this.loadChunk(position);
         this.unloadChunk(position);
+        this.loadChunk(position);
     }
 
     // Send batch of chunks to worker for processing
@@ -212,6 +215,7 @@ export class ChunkWorks{
             { vertices, normals, indices }
         );
         this.loadedChunks.set(key, chunk);
+        // this.waterChunks.set(key, new WaterChunk(this.gl, chunkX, chunkZ, this.chunkSize, chunk))
 
         // if (type === 'render') {
             // For rendering, add to renderChunks
@@ -227,6 +231,9 @@ export class ChunkWorks{
         this.loadedChunks.forEach(chunk => {
             chunk.render(this.gl, uModelLocation, uNormalMatrix);
         })
+        // this.waterChunks.forEach(chunk => {
+        //     chunk.render(this.gl, uModelLocation, uNormalMatrix);
+        // })
     }
 }
 
@@ -254,6 +261,7 @@ export class Chunk extends SceneObject{
             this.vertices = new Float32Array(chunkData.vertices);
             this.normals = new Float32Array(chunkData.normals);
             this.indices = new Uint16Array(chunkData.indices);
+            console.log("----------------------------------------------")
         } else {
             // If no pre-generated data, generate terrain using the provided params
             const { vertices, normals, indices } = generateTerrain(
@@ -273,8 +281,7 @@ export class Chunk extends SceneObject{
             this.indices = new Uint16Array(indices);
         }
         
-        this.ProgramSetUp(gl)
-
+        this.ProgramSetUp(gl);
     }
 
     // Bind the buffers
@@ -332,3 +339,155 @@ export class Frustrum{
     
 }
 
+
+export class WaterChunk extends SceneObject{
+    constructor(gl, chunkX, chunkZ, chunkSize, chunk){
+        super()
+
+        this.gl = gl;
+        this.chunkX = chunkX;
+        this.chunkZ = chunkZ;
+        this.chunkSize = chunkSize;
+        this.chunk = chunk;
+
+        this.seaLevel = -9.0  //- Remove lster
+
+
+        // this.vertices = [];
+        // this.colors = [];
+        // this.indices = [];
+
+        // Generate the vertices, colors, and indices
+        this.generateWaterGeometry();
+        this.ProgramSetUp(gl);
+
+
+    }
+
+    get map(){
+        const mapArray = [];
+        const data = [];
+
+        for (let x = 0; x < this.chunkSize; x++) {
+            for (let z = 0; z < this.chunkSize; z++) {
+
+                const vertex = this.chunk[x + z * this.chunkSize];
+
+                // Check the height (y value) of the vertex
+                const height = vertex.y;
+
+                // Check if it's above or below sea level
+                if (height > this.seaLevel) {
+                    // If above sea level, it's land (black)
+                    mapArray.push({ x, z, color: [0, 0, 0] });
+                    data.push(1);
+                } else {
+                    // If below sea level, it's water (grey, darker as it's deeper)
+                    const depth = this.seaLevel - height; // The deeper, the larger the value
+                    const greyIntensity = Math.min(1.0, depth / 10); // Adjust '10' to scale depth (distance from sea level)
+                    mapArray.push({ x, z, color: [greyIntensity, greyIntensity, greyIntensity] });
+                    data.push(greyIntensity)
+                }
+            }
+        }
+
+        return mapArray;  // Return the map array with colors for each vertex
+    }
+
+    // Generate the geometry for the water chunk
+    generateWaterGeometry() {
+        const vertices = [];
+        const colors = [];
+        const indices = [];
+        let index = 0;
+
+        for (let x = 0; x < this.chunkSize; x++) {
+            for (let z = 0; z < this.chunkSize; z++) {
+                console.log(this.chunk)
+                const vertex = this.chunk.vertices[x + z * this.chunkSize];
+                const height = vertex.y;
+
+                // Add the vertex position to the vertices array
+                vertices.push(vertex.x, height, vertex.z);
+
+                // Calculate color based on the height
+                if (height > this.seaLevel) {
+                    // Land (black)
+                    colors.push(0, 0, 0);
+                } else {
+                    // Water (shades of grey based on depth)
+                    const depth = this.seaLevel - height;
+                    const greyIntensity = Math.min(1.0, depth / 10); // Adjust depth scaling here
+                    colors.push(greyIntensity, greyIntensity, greyIntensity);
+                }
+
+                // Add indices for the water mesh grid (two triangles per square)
+                if (x < this.chunkSize - 1 && z < this.chunkSize - 1) {
+                    // Two triangles for each square in the grid
+                    indices.push(index, index + 1, index + this.chunkSize);
+                    indices.push(index + 1, index + this.chunkSize + 1, index + this.chunkSize);
+                }
+
+                index++;
+            }
+        }
+
+        this.vertices = new Float32Array(vertices);
+        this.colors = new Float32Array(colors);
+        this.indices = new Uint16Array(indices);
+    }
+
+
+
+
+
+
+
+
+
+    // Set up buffers for rendering
+    ProgramSetUp(gl) {
+        // Vertex buffer
+        this.vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertices, gl.STATIC_DRAW);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(0);
+
+        // Color buffer
+        this.colorBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.colors, gl.STATIC_DRAW);
+        gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(1);
+
+        // Index buffer
+        this.indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
+    }
+
+    // Render the water chunk
+    render(gl, uModelLocation, uNormalMatrix) {
+        // Rebind buffers
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+        gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(1);
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+
+        // Set the model matrix
+        const modelMatrix = this.getModelMatrix();
+        gl.uniformMatrix4fv(uModelLocation, false, modelMatrix.flat());
+        gl.uniformMatrix3fv(uNormalMatrix, false, normalMatrix(modelMatrix, true).flat());
+
+        // Draw the water mesh
+        gl.drawElements(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_SHORT, 0);
+    }
+
+
+}

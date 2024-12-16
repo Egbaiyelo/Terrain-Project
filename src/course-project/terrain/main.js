@@ -6,7 +6,7 @@ import fragSource from './shaders/terrain.frag';
 
 import { SceneObject, generateTerrain } from './sceneObject';
 import { menu } from './menu';
-import { Chunk, ChunkWorks } from './chunk.js';
+import { Chunk, ChunkWorks, WaterChunk } from './chunk.js';
 import { WorldRenderer } from './archive.js';
 
 // ------------------------------
@@ -50,12 +50,12 @@ const uNormalMatrix = gl.getUniformLocation(terrainProgram, 'uNormalMatrix');
 // ==========================================================
 
 // const terrain = new Chunk(gl, 0, 0, 10);
-const world = new ChunkWorks(gl, 2, null, 100);
-world.updateLocation(vec3(0.));
-const second = new WorldRenderer(gl, 2, null, 100);
-second.updateLocation(vec3(0.));
+// const world = new ChunkWorks(gl, 1, null, 100);
+// world.updateLocation(vec3(400.0));
+// const second = new WorldRenderer(gl, 2, null, 100);
+// second.updateLocation(vec3(0.));
 // console.log(world)
-
+// world.updateLocation(vec3(-500.0))
 
 
 let lastTime = 0;
@@ -67,13 +67,17 @@ let cameraPosition = menu.cameraPosition;
 
 let speed = 0.01;
 
+cameraPosition.x += 2;
+
+// console.log(world.loadedChunks)
+// const water = new WaterChunk(gl, 0, 0, 100, world.loadedChunks[0])
 function draw(time = 0) {
     let cameraChange = menu.cameraPosition;
-
+    
     cameraPosition.x += cameraChange.x * speed;
     cameraPosition.y += cameraChange.y * speed;
     cameraPosition.z += cameraChange.z * speed;
-
+    
     cameraTarget.x += cameraChange.x * speed;
     cameraTarget.y += cameraChange.y * speed;
     cameraTarget.z += cameraChange.z * speed;
@@ -98,6 +102,7 @@ function draw(time = 0) {
     cameraTarget.x += 0.2;
 
     world.updateLocation(cameraPosition)
+    console.log("campos", cameraPosition, )
     // // console.log(world.chunks)
     
     // terrain.scale.y = 2;
@@ -106,6 +111,7 @@ function draw(time = 0) {
     // terrain.render(gl, uModelLocation, uNormalMatrix)
     // chunky.render(gl, uModelLocation, uNormalMatrix)
     world.render(uModelLocation, uNormalMatrix)
+    // water.render(uModelLocation, uNormalMatrix)
 
     // ==========================================================
 

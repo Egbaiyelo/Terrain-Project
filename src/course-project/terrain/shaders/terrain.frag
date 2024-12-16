@@ -27,12 +27,12 @@ struct Light {
 uniform Material uMaterial;
 uniform Light uLight;
 
-vec3 blinnPhong(Material material, Light light) {
+vec3 blinnPhong(Material material, Light light, vec3 surfaceColor) {
     vec3 l = normalize(light.pos - vPosition);  // Position -> Light
     vec3 n = normalize(vNormal);                // Surface normal
 
     float Kd = max(dot(l, n), 0.0);
-    vec3 diffuse = material.diffuse * light.diffuse * Kd;
+    vec3 diffuse = surfaceColor * light.diffuse * Kd;
 
     // ...
 
@@ -56,14 +56,21 @@ vec3 blinnPhong(Material material, Light light) {
 
 
 void main() {
-    vec3 blue = vec3(0, 0.3803921568627451, 1);
+    vec3 blue = vec3(0.0, 0.3803921568627451, 1.0); 
+    vec3 green = vec3(0.0, 0.5, 0.0);              
+    vec3 brown = vec3(0.6, 0.3, 0.0);              
 
-    vec3 color = blinnPhong(uMaterial, uLight);    
+    vec3 surfaceColor;
 
-    if (vPosition.y <= -9.0){
-        fColor = vec4(blue, 1.0);
+    if (vPosition.y <= -9.0) {
+        surfaceColor = blue;  // Apply blue color at low heights
+    } else if (vPosition.y < -3.0) {
+        surfaceColor = green;  // Green for mid-range heights
     } else {
-
-        fColor = vec4(color, 1.0);
+        surfaceColor = brown;  // Brown for higher regions
     }
+
+    vec3 color = blinnPhong(uMaterial, uLight, surfaceColor);
+
+    fColor = vec4(color, 1.0);  // Final color output
 }

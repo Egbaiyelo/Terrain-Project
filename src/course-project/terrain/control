@@ -1,0 +1,84 @@
+class Controller {
+    constructor(window, position, target) {
+        this.window = window;
+
+        this.px = position.x;  // Positions
+        this.py = position.y;  
+        this.pz = position.z;  
+
+        this.tx = target.x;    // Targets
+        this.ty = target.y;  
+        this.tz = target.z;
+
+        this.rotation = 0;  // Rotation angle
+        this.squintFactor = 0;  // (basically zoom)
+
+        this.keys = {};
+        this.moveTarget = false;    // if you want to move the target with the camera moves, so like a player
+        this.moveSpeed = 1;
+
+        this.window.addEventListener('keydown', (e) => {
+            this.keys[e.key] = true;
+            this.update()
+        });
+
+        this.window.addEventListener('keyup', (e) => {
+            this.keys[e.key] = false; 
+        });
+    }
+
+    update() {
+        const keys = this.keys
+        // Handle movement (WASD)
+        if (keys["w"]){
+            this.pz += 1;
+            if (this.moveTarget) this.tz += 1;
+        } 
+        if (keys["s"]){
+            this.pz -= 1;
+            if (this.moveTarget) this.tz -= 1;
+        } 
+        if (keys["a"]){
+            this.px -= 1;
+            if (this.moveTarget) this.tx -= 1;
+        } 
+        if (keys["d"]){
+            this.px += 1;
+            if (this.moveTarget) this.tx += 1;
+        } 
+
+        // Handle rotation (QE)
+        if (keys["q"]) this.rotation -= 1;
+        if (keys["e"]) this.rotation += 1;
+
+        // Handle vertical movement (FC)
+        if (keys["f"]){
+            this.py += 1;
+            if (this.moveTarget) this.ty += 1;
+        }  
+        if (keys["c"]){
+            this.py -= 1;
+            if (this.moveTarget) this.ty -= 1;
+        }  
+
+        // Handle squinting (ZX) - Target change logic
+        if (keys["z"]) this.squintFactor -= 1;
+        if (keys["x"]) this.squintFactor += 1;
+
+        if (keys["k"]) this.moveTarget = !this.moveTarget; // probably a keydown or somthing
+        // if (keys["l"]) // increase move speed
+    }
+
+    get position() {
+        return vec3( this.px, this.py, this.pz );
+    }
+
+    get target(){
+        return vec3( this.tx, this.ty, this.tz );
+    }
+
+    getRotation() {
+        return this.rotation;
+    }
+
+}
