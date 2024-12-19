@@ -29,13 +29,13 @@ uniform Light uLight;
 
 
 // Bling phong from the lab
-vec3 blinnPhong(Material material, Light light) {
+vec3 blinnPhong(Material material, Light light, vec3 surfaceColor) {
     vec3 l = normalize(light.pos - vPosition);  // Position -> Light
     vec3 n = normalize(vNormal);                // Surface normal
 
     float Kd = max(dot(l, n), 0.0);
-    vec3 diffuse = material.diffuse * light.diffuse * Kd;
-
+    vec3 diffuse =  surfaceColor * light.diffuse * Kd;
+ 
     // ...
 
     vec3 cameraPos = vec3(inverse(uViewMatrix)[3]);
@@ -58,14 +58,43 @@ vec3 blinnPhong(Material material, Light light) {
 
 
 void main() {
-    vec3 blue = vec3(0, 0.3803921568627451, 1);
+    // Define colors
+    vec3 blue = vec3(0.0, 0.3803, 1.0); 
+    vec3 green = vec3(0.0, 0.5, 0.0);              
+    vec3 brown = vec3(0.6, 0.3, 0.0);              
+    vec3 white = vec3(1.0, 1.0, 1.0); // White for flat surfaces
 
-    vec3 color = blinnPhong(uMaterial, uLight);    
+    // Flatness threshold
+    float grassThreshold = 0.1; // Specifying the flatness of land to tolerate grass
+    float iceThreshold = 0.9;   // '' tolerate ice
 
-    if (vPosition.y <= -9.0){
-        fColor = vec4(blue, 1.0);
-    } else {
+    // vec3 color = blinnPhong(uMaterial, uLight);   
+    vec3 surfaceColor = vec3(0); 
 
-        fColor = vec4(color, 1.0);
+    // Water essentially
+    if (vPosition.y <= -9.0) {
+        surfaceColor = blue;  // Apply blue color at low heights
     }
+    // Land range
+    else if (vPosition.y < -3.0) {
+        if (abs(vNormal.x) > (grassThreshold)) {
+            surfaceColor = green;  // Grass on flatter surfaces
+        } else {
+            surfaceColor = brown;  // Unlikely but just some instances
+        }
+    }
+    // Mountain (range)
+    else {
+        if (abs(vNormal.x) < (iceThreshold)) {
+            surfaceColor = white;  // Surfaces that can hold snow
+        } else {
+            surfaceColor = brown;  // Very likely
+        }
+    }
+
+    // Using the bling phong
+    vec3 color = blinnPhong(uMaterial, uLight, surfaceColor);
+
+    // Final color output
+    fColor = vec4(color, 1.0);
 }

@@ -167,7 +167,7 @@ export function generateTerrain(terrainX, terrainZ, length, width, scale, octave
             // calculate normal for lighting
             const normal = vec3(
                 leftCurved - rightCurved,
-                2.0,
+                2.0 * scale * heightMultiplier,
                 topCurved - bottomCurved
             );
 

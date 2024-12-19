@@ -226,6 +226,7 @@ export class ChunkWorks{
         // console.log(this.renderChunks)
         this.loadedChunks.forEach(chunk => {
             chunk.render(this.gl, uModelLocation, uNormalMatrix);
+            console.log(chunk)
         })
     }
 }

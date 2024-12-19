@@ -8,6 +8,7 @@ import { SceneObject, generateTerrain } from './sceneObject';
 import { menu } from './menu';
 import { Chunk, ChunkWorks } from './chunk.js';
 import { WorldRenderer } from './archive.js';
+import { ControlSystem } from './supplements.js';
 
 // ------------------------------
 
@@ -54,8 +55,6 @@ const world = new ChunkWorks(gl, 2, null, 100);
 world.updateLocation(vec3(0.));
 const second = new WorldRenderer(gl, 2, null, 100);
 second.updateLocation(vec3(0.));
-// console.log(world)
-
 
 
 let lastTime = 0;
@@ -64,19 +63,20 @@ let fps = 0;
 
 let cameraTarget = vec3(0)
 let cameraPosition = menu.cameraPosition;
+const controller = new ControlSystem(document, cameraPosition, cameraTarget)
 
 let speed = 0.01;
 
 function draw(time = 0) {
-    let cameraChange = menu.cameraPosition;
+    // let cameraChange = menu.cameraPosition;
 
-    cameraPosition.x += cameraChange.x * speed;
-    cameraPosition.y += cameraChange.y * speed;
-    cameraPosition.z += cameraChange.z * speed;
+    // cameraPosition.x += cameraChange.x * speed;
+    // cameraPosition.y += cameraChange.y * speed;
+    // cameraPosition.z += cameraChange.z * speed;
 
-    cameraTarget.x += cameraChange.x * speed;
-    cameraTarget.y += cameraChange.y * speed;
-    cameraTarget.z += cameraChange.z * speed;
+    // cameraTarget.x += cameraChange.x * speed;
+    // cameraTarget.y += cameraChange.y * speed;
+    // cameraTarget.z += cameraChange.z * speed;
 
 
     const deltaTime = time - lastTime;
@@ -94,8 +94,8 @@ function draw(time = 0) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // ==========================================================
-    cameraPosition.x += 0.2;
-    cameraTarget.x += 0.2;
+    // cameraPosition.x += 0.2;
+    // cameraTarget.x += 0.2;
 
     world.updateLocation(cameraPosition)
     // // console.log(world.chunks)
