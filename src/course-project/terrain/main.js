@@ -110,7 +110,7 @@ function draw(time = 0) {
     // ==========================================================
 
     const viewMatrix = lookAtMatrix(cameraPosition, cameraTarget);
-    const projMatrix = perspectiveMatrix(radians(60), canvas.width / canvas.height, 0.1, 200);
+    const projMatrix = perspectiveMatrix(radians(60), canvas.width / canvas.height, 0.1, 400);
     gl.uniformMatrix4fv(uViewLocation, false, viewMatrix.flat());
     gl.uniformMatrix4fv(uProjLocation, false, projMatrix.flat());
 
