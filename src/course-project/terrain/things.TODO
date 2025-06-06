@@ -1,0 +1,28 @@
+from old proj
+
+Finish the chunk object with one heightmap
+finish the chunk renderer
+Finish the object with multiple heightmap, start from two
+stop passing the x and z to GPU but try to use strip too
+use instanceID to draw chunks
+Test in smaller before adding
+
+World renderer, gets player visinity, calculates it somehow and gets the chunks to load.
+it has buffer of loaded chunks and buffer of nearby chunks to keep for quick loading. so chunks outside vicinity
+are loaded but not rendered yet. 
+
+loadspace and renderspace. if chunk not in loadspace, put it, if chunk not in renderspace, get from loadspace\
+chunks are gotten from chunk coordinates which are say (1,1) which is (100,100) if the chunk size is 100
+
+Use extra height map for biomes and extra for getting the type of mountains
+now you see changing biomes and mputain types needs to work with the mountains, biome and mountain 
+type cnat just change in the middle of the mountain.
+
+get foliage on certain biomes
+
+if stuff works, try it on GPU (if heightmap merging works)
+
+
+how to use glinstanced id to get chunk location for x and ys in chunk
+
+Maybe use renderer object
